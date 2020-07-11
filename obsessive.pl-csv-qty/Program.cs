@@ -32,7 +32,7 @@ namespace obsessive.pl_csv_qty
             try
             {
                 WebClient downloadWC = new WebClient();
-                //   downloadWC.Credentials = new System.Net.NetworkCredential("nattalex@nattalex.pl", "Nattalex");
+              
                 byte[] buff = downloadWC.DownloadData("https://obsessive.com/productsexport/stocks.csv");
 
                 using (System.IO.FileStream fs = new FileStream(@"C:\szkolenie\stocks.csv", FileMode.Create))
@@ -54,38 +54,54 @@ namespace obsessive.pl_csv_qty
         static void Main(string[] args)
         {
             string path = (@"C:\szkolenie\stocks.csv");
-            //  PobierzCSV();
-            load aa = new load();
-         var ss =   aa.loadCsvFile(path);
-            foreach(var gg in ss)
+
+              PobierzCSV();
+           
+
+            load file = new load();
+         var items =   file.loadCsvFile(path);
+            foreach(var item in items)
             {
-                //string[] columns = gg.Split(';');
-                //foreach(var zzss in columns)
-                //{
-                string ggs = gg;
 
-                //   string qty = zzss[0];
+                string line = item;
 
-                //}
-                string[] col = ggs.Split(';');
+             
+
+                
+                string[] col = line.Split(';');
                 string ean = col[1];
                 string qty = col[4];
                 string qtyclean = qty.Trim(new Char[] { '"', '\'', '.', 'P', 'o', 'w', 'y', 'ż', 'e','j' });
                 string eanclean = ean.Trim(new char[] { '"' });
-                int qtyin = Int32.Parse(qtyclean);
+                int qtyint = Int32.Parse(qtyclean);
                 SqlEntity sql = new SqlEntity();
                 sql.TWRXML_TWR_EAN = eanclean;
-                sql.TWRXML_ILOSC = qtyin;
+                sql.TWRXML_ILOSC = qtyint;
 
-                sqlmetods ins = new sqlmetods();
-                ins.Insert(sql);
+                sqlmetods check = new sqlmetods();
+                var twrids = check.CheckTwrID(eanclean);
+                if (twrids.Count==0)
+                {
+
+                    sqlmetods ins = new sqlmetods();
+                    ins.Insert(sql);
+                }
+                else
+                {
+                    foreach(var twrid in twrids)
+                    {
+                        sqlmetods up = new sqlmetods();
+                        up.UpdateQty(twrid.TWRXML_ID, qtyint);
+                    }
+                   
+                }
+
+
 
 
             }
             
            
-            // for set encoding
-            // StreamReader sr = new StreamReader(@"file.csv", Encoding.GetEncoding(1250));
            
         }
     }
